@@ -1,0 +1,24 @@
+KANJI ULTIMATE ATLAS — iPHONE INSTALL
+
+1. Put this folder on any HTTPS static website (GitHub Pages is a simple option).
+2. Open the website in Safari on iPhone.
+3. Tap Share.
+4. Tap “Add to Home Screen”.
+5. Name it “Kanji Atlas”.
+6. Tap Add.
+
+After the first successful load, the service worker caches the main app files for offline use.
+
+IMPORTANT:
+A ZIP file cannot be installed directly as an iPhone application.
+This package is a PWA (Progressive Web App), not an App Store .ipa.
+
+FASTEST FREE HOSTING:
+GitHub Pages:
+• Create a GitHub repository.
+• Upload all files/folders from this package.
+• Settings → Pages → Deploy from branch → main → /root.
+• Open the generated HTTPS Pages address in Safari.
+• Add to Home Screen.
+
+The app stores learned/favorite progress locally in the browser.

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<meta name="theme-color" content="#17324d"><link rel="manifest" href="manifest.webmanifest"><title>Kanji Ultimate Atlas — FINAL</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#15202b;--muted:#687582;--accent:#17324d;--accent2:#2f6289;--line:#dce3e9;--ok:#16734a;--warn:#a55a00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Sans",Arial,sans-serif}
+header{background:linear-gradient(135deg,#132e46,#347099);color:#fff;padding:20px 17px 17px;position:sticky;top:0;z-index:5}
+h1{font-size:24px;margin:0}.sub{font-size:12px;opacity:.78}main{max-width:980px;margin:auto;padding:14px 14px 88px}
+.search{width:100%;padding:14px 15px;border:1px solid var(--line);border-radius:14px;background:white;font-size:16px}
+.tabs,.actions{display:flex;gap:8px;overflow:auto;margin:11px 0}.btn,.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 13px;white-space:nowrap}.btn.active{background:var(--accent);color:#fff}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:16px;margin:11px 0}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:13px;min-height:145px;position:relative;cursor:pointer}.card.learned{border-color:#82bda1}
+.k{font-size:48px;line-height:1;margin-bottom:7px}.lv{font-size:10px;color:var(--muted)}.meaning{font-size:13px}.star{position:absolute;right:7px;top:6px;border:0;background:none;font-size:20px;color:#b17b00}
+.detail{text-align:center}.hero{font-size:100px;line-height:1;margin:8px}.detail .row{text-align:left;margin:14px 0}.label{text-transform:uppercase;font-size:10px;letter-spacing:.1em;color:var(--muted)}.value{font-size:16px;margin-top:4px}.ex{background:#f0f4f7;padding:9px;border-radius:9px;margin:6px 0}
+.maproot{text-align:center;font-size:70px;font-weight:700}.branches{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;margin-top:20px}.branch{text-align:center;border:1px solid var(--line);border-radius:13px;padding:10px;background:#fff;cursor:pointer}.branch b{display:block;font-size:35px}
+.progress{display:flex;gap:8px;align-items:center}.bar{height:10px;background:#e3e8ec;border-radius:99px;overflow:hidden;flex:1}.fill{height:100%;background:var(--ok)}
+.quiz{max-width:600px;margin:auto;text-align:center}.quizchar{font-size:105px;margin:20px}.choice{display:block;width:100%;padding:14px;margin:8px 0;border:1px solid var(--line);border-radius:12px;background:white;font-size:16px;text-align:left}.choice.correct{border-color:#5aa77e;background:#e9f7ef}.choice.wrong{border-color:#c36d6d;background:#fff0f0}
+.badge{display:inline-block;padding:4px 8px;border-radius:99px;background:#edf2f5;color:#52616d;font-size:11px}.warn{color:var(--warn)}.empty{text-align:center;color:var(--muted);padding:45px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--line);display:flex;justify-content:center;gap:3px;padding:7px;z-index:10}.nav button{border:0;background:none;padding:8px 9px;color:var(--muted);font-size:12px}.nav button.active{color:var(--accent);font-weight:700}
+@media(min-width:700px){.nav{position:static}.grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}}
+</style></head><body>
+<header><h1>漢字 Ultimate Atlas</h1><div class="sub">612 Kanji • N5 → N4 → N3 • Learn by families</div></header>
+<main id="app"></main>
+<nav class="nav">
+<button onclick="home()" id="n-home">⌂ Home</button><button onclick="level('N5')" id="n-n5">N5</button><button onclick="level('N4')" id="n-n4">N4</button><button onclick="level('N3')" id="n-n3">N3</button><button onclick="families()" id="n-fam">Families</button><button onclick="quiz()" id="n-quiz">Quiz</button><button onclick="savedPage()" id="n-save">★</button>
+</nav>
+<script src="data.js"></script><script>if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});</script>
+<script>
+const D=KANJI_DATA, all=[...D.levels.N5,...D.levels.N4,...D.levels.N3];
+const saved=new Set(JSON.parse(localStorage.getItem("ka_saved")||"[]")), learned=new Set(JSON.parse(localStorage.getItem("ka_learned")||"[]"));
+let quizState={};
+function save(){localStorage.setItem("ka_saved",JSON.stringify([...saved]));localStorage.setItem("ka_learned",JSON.stringify([...learned]))}
+function lvl(k){return D.levels.N5.includes(k)?"N5":D.levels.N4.includes(k)?"N4":"N3"}
+function inf(k){return D.data[k]||["Meaning pending verification","Reading pending verification","", "Vocabulary pending verification"]}
+function nav(id){document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));let x=document.getElementById("n-"+id);if(x)x.classList.add("active")}
+function card(k){let i=inf(k);return `<div class="card ${learned.has(k)?"learned":""}" onclick="detail('${k}')"><button class="star" onclick="event.stopPropagation();fav('${k}')">${saved.has(k)?"★":"☆"}</button><div class="k">${k}</div><div class="lv">${lvl(k)} ${learned.has(k)?"• learned":""}</div><div class="meaning">${i[0]}</div></div>`}
+function grid(a){return `<div class="grid">${a.map(card).join("")}</div>`}
+function home(){nav("home");let p=Math.round(learned.size/612*100);document.getElementById("app").innerHTML=`<input class="search" placeholder="Search kanji, meaning, vocabulary…" oninput="search(this.value)"><div id="results"></div><div class="panel"><h2>My progress</h2><div class="progress"><div class="bar"><div class="fill" style="width:${p}%"></div></div><b>${learned.size}/612</b></div><p class="sub">${p}% learned</p></div><div class="panel"><h2>Choose your route</h2><div class="tabs"><button class="btn" onclick="level('N5')">N5 · 79</button><button class="btn" onclick="level('N4')">N4 · 166</button><button class="btn" onclick="level('N3')">N3 · 367</button><button class="btn" onclick="families()">Visual families</button><button class="btn" onclick="daily()">Daily Review</button><button class="btn" onclick="quiz()">Quiz</button></div></div><div class="panel"><h2>Study method</h2><p>Open a family → learn the anchor → study its branches → mark kanji learned → review with Quiz.</p></div>`}
+function search(q){q=q.toLowerCase().trim();let a=all.filter(k=>{let i=inf(k);return !q||k.includes(q)||i[0].toLowerCase().includes(q)||i[3].toLowerCase().includes(q)}).slice(0,80);document.getElementById("results").innerHTML=q?`<h2>Results</h2>${grid(a)}`:""}
+function level(l){nav(l.toLowerCase());document.getElementById("app").innerHTML=`<div class="tabs"><button class="btn active">${l} · ${D.levels[l].length}</button><button class="btn" onclick="quiz('${l}')">Quiz this level</button></div><input class="search" placeholder="Filter ${l}…" oninput="filterLevel('${l}',this.value)"><div id="lg">${grid(D.levels[l])}</div>`}
+function filterLevel(l,q){q=q.toLowerCase();document.getElementById("lg").innerHTML=grid(D.levels[l].filter(k=>k.includes(q)||inf(k)[0].toLowerCase().includes(q)||inf(k)[3].toLowerCase().includes(q)))}
+function detail(k){learned.add(k);save();let i=inf(k), fs=D.families.filter(f=>f[1].includes(k));document.getElementById("app").innerHTML=`<div class="actions"><button class="chip" onclick="level('${lvl(k)}')">← ${lvl(k)}</button><button class="chip" onclick="fav('${k}')">${saved.has(k)?"★ Saved":"☆ Save"}</button><button class="chip" onclick="quizOne('${k}')">Test me</button></div><div class="panel detail"><div class="hero">${k}</div><span class="badge">${lvl(k)} • learned</span><div class="row"><div class="label">Meaning</div><div class="value">${i[0]}</div></div><div class="row"><div class="label">On’yomi</div><div class="value">${i[1]}</div></div><div class="row"><div class="label">Kun’yomi</div><div class="value">${i[2]||"—"}</div></div><div class="row"><div class="label">Vocabulary</div>${i[3].split("; ").map(x=>`<div class="ex">${x}</div>`).join("")}</div><div class="row"><div class="label">Family map</div>${fs.length?fs.map(f=>`<button class="chip" onclick="family('${f[0]}')">${f[0]}</button>`).join(" "):"<div class='sub'>No family assignment yet.</div>"}</div></div>`}
+function fav(k){saved.has(k)?saved.delete(k):saved.add(k);save();detail(k)}
+function families(){nav("fam");document.getElementById("app").innerHTML=`<h2>Visual Kanji Families</h2><p class="sub">Use these maps to connect related kanji instead of memorizing isolated characters.</p>${D.families.map(f=>`<div class="panel" onclick="family('${f[0]}')"><h3>${f[0]}</h3><div class="branches">${f[1].slice(0,10).map(k=>`<div class="branch"><b>${k}</b>${inf(k)[0]}</div>`).join("")}</div></div>`).join("")}`}
+function family(name){let f=D.families.find(x=>x[0]===name);document.getElementById("app").innerHTML=`<div class="actions"><button class="chip" onclick="families()">← Families</button></div><div class="panel"><h2>${name}</h2><div class="maproot">${f[1][0]}</div><div class="branches">${f[1].slice(1).map(k=>`<div class="branch" onclick="detail('${k}')"><b>${k}</b>${inf(k)[0]}</div>`).join("")}</div></div>`}
+function savedPage(){nav("save");let a=[...saved];document.getElementById("app").innerHTML=`<h2>Saved kanji (${a.length})</h2>${a.length?grid(a):"<div class='empty'>No saved kanji yet.</div>"}`}
+function daily(){let p=[...all].filter(k=>!learned.has(k));let pool=(p.length?p:all).sort(()=>Math.random()-.5).slice(0,10);nav("quiz");quizState={pool,score:0,index:0};quizNext()}
+function quiz(l){nav("quiz");let pool=l?D.levels[l]:all;quizState={pool:[...pool],score:0,index:0};quizNext()}
+function quizOne(k){nav("quiz");quizState={pool:[k],score:0,index:0};quizNext()}
+function quizNext(){let q=quizState.pool[quizState.index];if(!q){document.getElementById("app").innerHTML=`<div class="panel quiz"><h2>Quiz complete</h2><div style="font-size:55px">${quizState.score}/${quizState.pool.length}</div><p>Keep reviewing the missed characters.</p><button class="btn" onclick="quiz()">New 10-ish quiz</button></div>`;return}
+let i=inf(q), choices=[q,...quizState.pool.filter(x=>x!==q).sort(()=>Math.random()-.5).slice(0,3)].sort(()=>Math.random()-.5);
+document.getElementById("app").innerHTML=`<div class="panel quiz"><span class="badge">${quizState.index+1}/${quizState.pool.length}</span><div class="quizchar">${q}</div><p><b>Which meaning is correct?</b></p>${choices.map(c=>`<button class="choice" onclick="answer('${q}','${c}',this)">${inf(c)[0]}</button>`).join("")}</div>`}
+function answer(q,c,el){document.querySelectorAll(".choice").forEach(b=>b.disabled=true);if(c===q){el.classList.add("correct");quizState.score++;learned.add(q)}else{el.classList.add("wrong");document.querySelectorAll(".choice").forEach(b=>{if(b.textContent===inf(q)[0])b.classList.add("correct")})}save();setTimeout(()=>{quizState.index++;quizNext()},650)}
+home();
+</script></body></html>
